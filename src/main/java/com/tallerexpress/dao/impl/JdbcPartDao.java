@@ -1,5 +1,6 @@
-package com.tallerexpress.dao;
+package com.tallerexpress.dao.impl;
 
+import com.tallerexpress.dao.PartDao;
 import com.tallerexpress.exception.DataAccessException;
 import com.tallerexpress.model.Part;
 import java.sql.*;

@@ -30,6 +30,7 @@ TallerExpress/
     │       ├── config/
     │       ├── controller/
     │       ├── dao/
+    │       │   └── impl/
     │       ├── exception/
     │       ├── model/
     │       ├── service/
@@ -122,7 +123,8 @@ El controlador no escribe directamente en la base de datos. Envía los datos a `
 
 ### Carpeta `model`
 
-Representa las entidades principales del negocio. Cada `record` encapsula los datos de una entidad.
+Representa las entidades principales del negocio. Cada modelo es una clase con atributos privados,
+constructor y métodos públicos de acceso, aplicando encapsulamiento.
 
 #### `Part.java`
 
@@ -167,13 +169,14 @@ Extiende `CrudDao<Part>` y agrega operaciones propias de los repuestos:
 - Comprobar si un código ya existe.
 - Filtrar por categoría y proveedor.
 
-#### `JdbcPartDao.java`
+#### Carpeta `dao/impl`
 
-Implementa `PartDao` mediante JDBC. Contiene consultas `INSERT`, `UPDATE` y `SELECT`, utiliza `PreparedStatement` y cierra recursos con `try-with-resources`.
+Contiene las implementaciones JDBC de las interfaces DAO. Allí se encuentran las consultas
+`INSERT`, `UPDATE`, `DELETE` y `SELECT`, el uso de `PreparedStatement` y el cierre de recursos.
 
 Cada entidad dispone de un contrato DAO y una implementación JDBC: `PartDao`/`JdbcPartDao`,
 `ClientDao`/`JdbcClientDao`, `VehicleDao`/`JdbcVehicleDao`, `UserDao`/`JdbcUserDao` y
-`ServiceOrderDao`/`JdbcServiceOrderDao`. Todo el SQL está encapsulado en estas implementaciones.
+`ServiceOrderDao`/`JdbcServiceOrderDao`. Todo el SQL está encapsulado en el paquete `dao.impl`.
 
 ### Carpeta `service`
 
