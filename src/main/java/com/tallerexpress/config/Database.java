@@ -3,15 +3,11 @@ package com.tallerexpress.config;
 import java.sql.*;
 
 public final class Database {
-  private static final String URL =
-      configuration("taller.db.url", "DB_URL", "jdbc:postgresql://localhost:5433/tallerexpress");
-  private static final String USER = configuration("taller.db.user", "DB_USER", "tallerexpress");
-  private static final String PASSWORD =
-      configuration("taller.db.password", "DB_PASSWORD", "");
-  private static final String ADMIN_USERNAME =
-      configuration("taller.admin.username", "APP_ADMIN_USERNAME", "admin");
-  private static final String ADMIN_PASSWORD =
-      configuration("taller.admin.password", "APP_ADMIN_PASSWORD", "");
+  private static final String URL = "jdbc:postgresql://localhost:5433/tallerexpress";
+  private static final String USER = "tallerexpress";
+  private static final String PASSWORD = "tallerexpress";
+  private static final String ADMIN_USERNAME = "admin";
+  private static final String ADMIN_PASSWORD = "admin123";
 
   private Database() {}
 
@@ -36,7 +32,7 @@ public final class Database {
     String adminSql =
         "INSERT INTO users(username,password,full_name,role,status) "
             + "VALUES(?,?,'Administrador','ADMIN','ACTIVO') "
-            + "ON CONFLICT (username) DO NOTHING";
+            + "ON CONFLICT (username) DO UPDATE SET password=EXCLUDED.password";
 
     try (Connection connection = getConnection();
         PreparedStatement statement = connection.prepareStatement(adminSql)) {
@@ -46,18 +42,4 @@ public final class Database {
     }
   }
 
-  private static String configuration(
-      String systemProperty, String environmentVariable, String defaultValue) {
-    String propertyValue = System.getProperty(systemProperty);
-    if (propertyValue != null && !propertyValue.isBlank()) {
-      return propertyValue;
-    }
-
-    String environmentValue = System.getenv(environmentVariable);
-    if (environmentValue != null && !environmentValue.isBlank()) {
-      return environmentValue;
-    }
-
-    return defaultValue;
-  }
 }

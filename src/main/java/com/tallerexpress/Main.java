@@ -2,7 +2,7 @@ package com.tallerexpress;
 
 import com.tallerexpress.config.Database;
 import com.tallerexpress.controller.AppController;
-import javax.swing.JOptionPane;
+import com.tallerexpress.view.DialogView;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -24,11 +24,7 @@ public final class Main {
     } catch (Exception exception) {
       exception.printStackTrace();
 
-      JOptionPane.showMessageDialog(
-          null,
-          "No fue posible iniciar TallerExpress: " + exception.getMessage(),
-          "Error",
-          JOptionPane.ERROR_MESSAGE);
+      DialogView.error("No fue posible iniciar TallerExpress: " + exception.getMessage());
     }
   }
 }

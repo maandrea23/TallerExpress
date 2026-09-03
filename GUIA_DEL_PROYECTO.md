@@ -32,7 +32,8 @@ TallerExpress/
     │       ├── dao/
     │       ├── exception/
     │       ├── model/
-    │       └── service/
+    │       ├── service/
+    │       └── view/
     └── test/
         └── java/com/tallerexpress/
 ```
@@ -80,7 +81,7 @@ Sus responsabilidades son:
 - Guardar la URL, el usuario y la contraseña de conexión.
 - Entregar conexiones mediante `getConnection()`.
 - Crear las tablas `clients`, `vehicles`, `parts`, `users`, `service_orders` y `order_parts`.
-- Crear el usuario administrador con las credenciales definidas localmente en `.env`.
+- Crear el usuario administrador con las credenciales definidas directamente en el código.
 - Declarar llaves primarias, llaves foráneas, restricciones únicas y validaciones de valores no negativos.
 
 El proyecto utiliza PostgreSQL, levantado mediante `docker-compose.yml`. La aplicación se conecta por JDBC y crea automáticamente las tablas la primera vez que se ejecuta.
@@ -93,18 +94,29 @@ PostgreSQL se publica en el puerto `5433` del computador para evitar conflictos 
 
 Controla la interacción con el usuario. Es la capa que muestra los `JOptionPane` y recibe la información escrita en los formularios.
 
-Contiene:
+Coordina el inicio de sesión y el menú principal. Desde allí delega cada módulo en un controlador
+independiente:
 
-- Formulario de inicio de sesión.
-- Menú principal.
-- Menú y formulario de repuestos.
-- Menú y formulario de clientes.
-- Menú y formulario de vehículos.
-- Menú y formulario de usuarios.
-- Menú y formulario de órdenes de servicio.
-- Selección de clientes, vehículos y repuestos.
-- Tablas de texto alineadas para mostrar resultados.
-- Mensajes de confirmación, éxito y error.
+- `PartController`: repuestos.
+- `ClientController`: clientes.
+- `VehicleController`: vehículos.
+- `UserController`: usuarios.
+- `OrderController`: órdenes de servicio.
+
+Los controladores no crean componentes Swing. Reciben datos de las vistas, llaman a los servicios
+y devuelven los resultados para su presentación.
+
+### Carpeta `view`
+
+Contiene toda la interfaz gráfica construida con `JOptionPane` y otros componentes Swing:
+
+- `AppView`: inicio de sesión y menú principal.
+- `PartView`: formularios y tablas de repuestos.
+- `ClientView`: formularios y tablas de clientes.
+- `VehicleView`: formularios y tablas de vehículos.
+- `UserView`: formularios y tablas de usuarios.
+- `OrderView`: formularios y tablas de órdenes.
+- `DialogView`: mensajes, confirmaciones y errores compartidos.
 
 El controlador no escribe directamente en la base de datos. Envía los datos a `PartService` o `WorkshopService`, respetando la separación por capas.
 
@@ -159,7 +171,9 @@ Extiende `CrudDao<Part>` y agrega operaciones propias de los repuestos:
 
 Implementa `PartDao` mediante JDBC. Contiene consultas `INSERT`, `UPDATE` y `SELECT`, utiliza `PreparedStatement` y cierra recursos con `try-with-resources`.
 
-En la implementación actual, el DAO separado está desarrollado para repuestos. Las consultas de clientes, vehículos, usuarios y órdenes están dentro de `WorkshopService`. Para cumplir de manera completamente estricta la separación DAO solicitada en el PDF, esas consultas también se podrían extraer a `ClientDao`, `VehicleDao`, `UserDao` y `ServiceOrderDao`.
+Cada entidad dispone de un contrato DAO y una implementación JDBC: `PartDao`/`JdbcPartDao`,
+`ClientDao`/`JdbcClientDao`, `VehicleDao`/`JdbcVehicleDao`, `UserDao`/`JdbcUserDao` y
+`ServiceOrderDao`/`JdbcServiceOrderDao`. Todo el SQL está encapsulado en estas implementaciones.
 
 ### Carpeta `service`
 
@@ -269,7 +283,8 @@ Se pueden registrar clientes y asociar uno o varios vehículos. La placa tiene u
 Ubicación principal:
 
 - Interfaz: `clientMenu()` y `vehicleMenu()`.
-- Reglas y JDBC: `WorkshopService`.
+- Reglas: `WorkshopService`.
+- JDBC: `JdbcClientDao` y `JdbcVehicleDao`.
 - Datos: `Client` y `Vehicle`.
 
 ### Usuarios y autenticación
@@ -279,7 +294,8 @@ El programa comienza con un login. Solamente un usuario con rol `ADMIN` puede ab
 Ubicación principal:
 
 - Login y menú: `AppController.login()` y `userMenu()`.
-- Reglas y JDBC: `WorkshopService`.
+- Reglas: `WorkshopService`.
+- JDBC: `JdbcUserDao`.
 - Decorador: `service/user`.
 
 La contraseña se guarda actualmente como texto para mantener el alcance académico del ejercicio. En un sistema real debe almacenarse con un algoritmo de hash seguro como BCrypt o Argon2.
@@ -333,16 +349,14 @@ Estas trazas son una simulación solicitada por el enunciado; la aplicación no 
 Primero se debe levantar PostgreSQL:
 
 ```bash
-docker --context default compose up -d
+docker compose up -d
 ```
 
 Para comprobar que el contenedor está funcionando:
 
 ```bash
-docker --context default compose ps
+docker compose ps
 ```
-
-En un equipo donde Docker Desktop esté iniciado se puede omitir `--context default`.
 
 Crear las tablas y verificar la conexión sin abrir la interfaz gráfica:
 
@@ -362,14 +376,12 @@ Ejecutar la aplicación:
 mvn exec:java
 ```
 
-Las credenciales iniciales se encuentran en el archivo local `.env`, que Git ignora. Para
-ejecutar Java hay que cargar primero sus variables:
+No se utilizan variables de entorno. La configuración está escrita en `Database.java` y
+`docker-compose.yml`. Las credenciales iniciales para ingresar son:
 
-```bash
-set -a
-source .env
-set +a
-mvn exec:java
+```text
+Usuario: admin
+Contraseña: admin123
 ```
 
 Orden recomendado para probar:
@@ -391,7 +403,6 @@ Antes de entregar el proyecto se debe:
 - Ejecutar la aplicación y agregar capturas reales de los `JOptionPane`.
 - Publicar el proyecto en un repositorio público de GitHub.
 - Generar el archivo comprimido solicitado.
-- Si se evalúa estrictamente un DAO por entidad, extraer de `WorkshopService` las consultas de clientes, vehículos, usuarios y órdenes a sus respectivos DAO.
 
 ## 7. Resumen de la separación por capas
 
